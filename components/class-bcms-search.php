@@ -1,10 +1,13 @@
 <?php
 
+require_once 'wlog.php';
+require_once 'Encoding.php';
+
 class bCMS_Search
 {
 
 	public $version = 1;
-	public $reindex_limit = 25;
+	public $reindex_limit = 100;
 
 	function __construct()
 	{
@@ -179,7 +182,6 @@ class bCMS_Search
 
 	function reindex()
 	{
-
 		// grab a batch of posts to work with
 		$posts = $this->wpdb->get_col(
 			"SELECT a.ID
@@ -195,10 +197,8 @@ class bCMS_Search
 		if( count( $posts ))
 		{
 			$insert = array();
-
 			foreach( $posts as $post_id )
 			{
-
 				$post = $this->get_post( $post_id );
 
 				if ( 
@@ -209,12 +209,15 @@ class bCMS_Search
 					continue;
 				}
 
+				$post_content = ForceUTF8\Encoding::fixUTF8( $post->post_content );
+
 				$insert[] = '('. 
 					(int) $post->ID .', '. 
 					(int) date( 'YW', strtotime( $post->post_date_gmt ) ) .', "'. 
-					$this->wpdb->escape( $post->post_content ) 
+					$this->wpdb->escape( $post_content )
 				.'")';
 			}
+wlog('indexed ' . count($posts) . ' posts');
 		}
 		else
 		{
@@ -246,7 +249,7 @@ class bCMS_Search
 
 		echo '<h2>bCMS Search reindex</h2><p>processed ' . $count . ' post(s) at '. date( DATE_RFC822 ) .'</p>';
 
-		if ( $reindex_limit <= $count )
+		if ( $this->reindex_limit <= $count )
 		{
 			echo '<p>Reloading...</p>';
 ?>
