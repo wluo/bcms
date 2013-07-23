@@ -245,6 +245,11 @@ wlog('indexed ' . count($posts) . ' posts');
 
 	function reindex_ajax()
 	{
+		if ( ! current_user_can( 'manage_options' ) )
+		{
+			return FALSE;
+		}
+		
 		$count = $this->reindex();
 
 		echo '<h2>bCMS Search reindex</h2><p>processed ' . $count . ' post(s) at '. date( DATE_RFC822 ) .'</p>';
@@ -267,6 +272,11 @@ window.location = "<?php echo admin_url( 'admin-ajax.php?action=bcms-search-rein
 
 	function reset_ajax()
 	{
+		if ( ! current_user_can( 'manage_options' ) )
+		{
+			return FALSE;
+		}
+		
 		$this->reset_table();
 
 		echo '<h2>bCMS Search index reset</h2><p>Action completed at '. date( DATE_RFC822 ) .'</p>';

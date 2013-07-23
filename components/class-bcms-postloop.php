@@ -39,7 +39,6 @@ class bCMS_PostLoop
 		$this->get_instances();
 
 		add_action( 'admin_init', array( $this, 'admin_init' ));
-//		add_filter( 'posts_request' , array( $this , 'posts_request' ));
 	}
 
 	function admin_init()
@@ -153,9 +152,9 @@ class bCMS_PostLoop
 	function get_templates_readdir( $template_base )
 	{
 		$page_templates = array();
-		$template_dir = @ dir( $template_base );
-		if ( $template_dir )
+		if( file_exists( $template_base ) )
 		{
+			$template_dir = dir( $template_base );
 			while ( ( $file = $template_dir->read() ) !== false )
 			{
 				if ( preg_match('|^\.+$|', $file ))
@@ -202,6 +201,8 @@ class bCMS_PostLoop
 			(array) $this->get_templates_readdir( TEMPLATEPATH . '/templates-'. $type .'/' ),
 			(array) $this->get_templates_readdir( STYLESHEETPATH . '/templates-'. $type .'/' )
 		);
+
+		$this->$type_var = apply_filters( 'bcms_postloop_templates', $this->$type_var );
 
 		return $this->$type_var;
 	}
@@ -353,10 +354,13 @@ class bCMS_PostLoop
 		return ' commentsort_order DESC, '. $sql;
 	}
 
-	function posts_request( $request )
+	function posts_request_once( $request )
 	{
-		echo $request;
-		return $request;
+		// remove the filter so that it only runs once
+		remove_filter( 'posts_request' , array( $this, 'posts_request_once' ));
+
+		// insert a comment in the query so we can track it better
+		return $request . ' /* ' . $this->sql_comment . ' */';
 	}
 
 } //end class
